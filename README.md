@@ -30,7 +30,7 @@ If the functionality of this bot suits your usage scenarios, there is not much t
 
 Create a project:
 
-    git clone LINK
+    git clone https://github.com/Aaaaaaaaaaann/responderbot.git
     cd responderbot
     python3 -m venv
     pip install -r requirements.txt
