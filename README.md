@@ -51,7 +51,7 @@ Create similar modules for any messengers you need. For example, in this project
 Create Popen objects for your auto-responders instead of current ones:
 
     def run_subprocs(free_at):
-    """"Run subprocesses, save their PIDs and run errors listeners."""
+    """Run subprocesses, save their PIDs and run errors listeners."""
         tg_subproc = subprocess.Popen([f'{wrkdir}/venv/bin/python', f'{wrkdir}/tg.py', free_at], stderr=subprocess.PIPE)
         d_subproc = subprocess.Popen([f'{wrkdir}/venv/bin/python', f'{wrkdir}/d.py', free_at], stderr=subprocess.PIPE)
         subprocs = [tg_subproc, d_subproc]
