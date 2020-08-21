@@ -1,10 +1,11 @@
 # ResponderBot
 This is a personal Telegram bot, which you can use to write your one.
 ## What does it do
-The bot is needed to reply to my colleagues when I am not available. It performs three functions:
+The bot is needed to reply to my colleagues when I am not available. It performs four functions:
 1. Runs two auto-responders: one for Telegram and one for Discord.
 2. Stops auto-responders.
-3. Adds to IDs list of those Telegram users who I want to get an automatic reply.
+3. Adds IDs of Telegram users to the set of recipients.
+4. Removes IDs from this set.
 
 ## How does it work
 The bot consists of the main module, two subprograms, and three supportive modules.
@@ -22,7 +23,7 @@ The modules include two dictionaries to build a string: the first one with diffe
 2. The module counts in what time the responders will be stopped.
 3. Then the module converts the time in a string, puts it in a massage, and returns this message.
 #### `users.py`
-The IDs of the users I want to get auto-replies are stored in `tg_users.txt`. This module gets the list of them.
+It contains variables with IDs of Telegram users. The recipients are stored in a set, which may be changed by a bot user.
 #### `smtplog.py`
 It merely contains an overridden omit() method of a class SMTPHandler from the logging package. This was needed for proper sending emails with tracebacks.
 ## How can you use it

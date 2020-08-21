@@ -14,7 +14,7 @@ import time
 from dotenv import load_dotenv
 import telebot
 
-import rureply   # enreply - an alternative for English
+import rureply
 from smtplog import MySMTPHandler
 import users
 
@@ -45,7 +45,7 @@ def catch_subproc_err(subproc):
 
 
 def run_subprocs(free_at):
-    """"Run subprocesses, save their PIDs and run errors listeners."""
+    """Run subprocesses, save their PIDs and run errors listeners."""
     tg_subproc = subprocess.Popen([f'{wrkdir}/venv/bin/python', f'{wrkdir}/tg.py', free_at], stderr=subprocess.PIPE)
     d_subproc = subprocess.Popen([f'{wrkdir}/venv/bin/python', f'{wrkdir}/d.py', free_at], stderr=subprocess.PIPE)
     subprocs = [tg_subproc, d_subproc]
@@ -101,16 +101,6 @@ def build_btn(btn_name):
     return markup
 
 
-def is_among_tg_users(id):
-    with open(f'{os.getcwd()}/tg_users.txt', 'r') as file:
-        return id in file.read().split()
-
-
-def add_to_tg_users(id):
-    with open(f'{os.getcwd()}/tg_users.txt', 'a') as file:
-        file.write(f'\n{id}')
-
-
 # ********************** Bot ********************** #
 
 bot = telebot.TeleBot(os.getenv('TG_TOKEN'))
@@ -137,15 +127,15 @@ def run_responders(message):
             run_subprocs(free_at)
             bot.send_message(message.chat.id, 'Run.', reply_markup=build_btn('Stop'))
         else:
-            bot.send_message(message.chat.id, 'Press "Run" again and write me correct time.',
+            bot.send_message(message.chat.id, 'Press "Run" again and send me correct time.',
                              reply_markup=build_btn('Run'))
     else:
-        bot.send_message(message.chat.id, 'Press "Run" again and write me correct time.',
+        bot.send_message(message.chat.id, 'Press "Run" again and send me correct time.',
                          reply_markup=build_btn('Run'))
 
 
 def notify_of_finish():
-    bot.send_message(users.ME, 'Responders have being disconnected.', reply_markup=build_btn('Run'))
+    bot.send_message(users.ME, 'Responders have been disconnected.', reply_markup=build_btn('Run'))
 
 
 @is_me
@@ -158,20 +148,35 @@ def stop_handle(message):
 
 @is_me
 @bot.message_handler(commands=['add'])
-def ask_for_id(message):
-    bot.send_message(message.chat.id, 'Write me the ID.')
+def ask_for_add_id(message):
+    bot.send_message(message.chat.id, 'Send me an ID.')
     bot.register_next_step_handler(message, add_user)
 
 
+@is_me
 def add_user(message):
     if message.text.isnumeric() and len(message.text) == 9:
-        if is_among_tg_users(message.text):
-            bot.send_message(message.chat.id, 'The ID is already in the list.')
-        else:
-            add_to_tg_users(message.text)
-            bot.send_message(message.chat.id, 'The ID was added.')
+        users.tg_users.add(int(message.text))
+        bot.send_message(message.chat.id, 'The ID on the list.')
     else:
-        bot.send_message(message.chat.id, 'Write me correct ID.')
+        bot.send_message(message.chat.id, 'Send me a correct ID.')
+
+
+@is_me
+@bot.message_handler(commands=['delete'])
+def ask_for_del_id(message):
+    bot.send_message(message.chat.id, 'Send me an ID.')
+    bot.register_next_step_handler(message, delete_user)
+
+
+@is_me
+def delete_user(message):
+    try:
+        users.tg_users.remove(int(message.text))
+    except KeyError:
+        bot.send_message(message.chat.id, 'There is not such ID on the list.')
+    else:
+        bot.send_message(message.chat.id, 'The ID is no longer on the list.')
 
 
 bot.polling()

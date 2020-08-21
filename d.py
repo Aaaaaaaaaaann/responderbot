@@ -15,6 +15,10 @@ import rureply
 
 load_dotenv()
 
+parser = argparse.ArgumentParser()
+parser.add_argument('time', type=str)
+args = parser.parse_args()
+
 d_client = discord.Client(proxy_auth=aiohttp.BasicAuth(login=os.getenv('D_EMAIL'), password=os.getenv('D_PASS')))
 
 d_replied = set()
@@ -34,9 +38,5 @@ async def on_message(message):
                 d_replied.add(sender)
                 await message.channel.send(msg)
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument('time', type=str)
-args = parser.parse_args()
 
 d_client.run(os.getenv('D_TOKEN'), bot=False)

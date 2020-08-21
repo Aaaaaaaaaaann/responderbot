@@ -9,8 +9,6 @@ The module helps build messages only if the user is out for a few hours, but not
 
 from datetime import datetime
 
-import users
-
 # 01: 0 h, 0 <= min <= 19; -> None
 # 02: 0 h, 20 <= min <= 39
 # 03: 0 h, 40 <= min <= 59
@@ -19,7 +17,6 @@ import users
 # 13: 1 h, 40 <= min <= 59
 # 1: 2 <= h <= 4, 0 <= min <= 19
 # 2: 2 <= h <= 4, 20 <= min <= 39
-# 3, 4: h >= 4, 20 <= min <= 39; -> N + 1 h
 
 TIME = {
     '01': None,
