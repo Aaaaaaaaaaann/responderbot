@@ -87,17 +87,28 @@ def autostop_subprocs(free_at):
 # ******************** Helpers ******************** #
 
 def is_me(func):
-    def checker(message):
-        if message.chat.id == users.ME:
-            return func(message)
+    def inner(*args):
+        if args[0].chat.id == users.ME:
+            return func(*args)
+    return inner
 
-    return checker
+
+def is_cancel(func):
+    def inner(*args):
+        if args[0].text == '/cancel':
+            bot.send_message(args[0].chat.id, 'Cancelled.')
+            return
+        return func(*args)
+    return inner
 
 
-def build_btn(btn_name):
+def build_btn(*btn_names):
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    run_btn = telebot.types.KeyboardButton(btn_name)
-    markup.row(run_btn)
+    btns = []
+    for name in btn_names:
+        btn = telebot.types.KeyboardButton(name)
+        btns.append(btn)
+    markup.row(*btns)
     return markup
 
 
@@ -112,14 +123,7 @@ def welcome(message):
     bot.send_message(message.chat.id, 'Let\'s run responders.', reply_markup=build_btn('Run'))
 
 
-@is_me
-@bot.message_handler(func=lambda message: message.text == 'Run')
-def ask_time(message):
-    bot.send_message(message.chat.id, 'What time will you be available? (Format: 00:00.)',
-                     reply_markup=telebot.types.ReplyKeyboardRemove())
-    bot.register_next_step_handler(message, run_responders)
-
-
+@is_cancel
 def run_responders(message):
     free_at = message.text
     if re.match(r'([0-1]\d|2[0-3]):[0-5]\d', free_at):
@@ -132,6 +136,14 @@ def run_responders(message):
     else:
         bot.send_message(message.chat.id, 'Press "Run" again and send me correct time.',
                          reply_markup=build_btn('Run'))
+
+
+@is_me
+@bot.message_handler(func=lambda message: message.text == 'Run')
+def ask_time(message):
+    bot.send_message(message.chat.id, 'What time will you be available? (Format: 00:00.)',
+                     reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.register_next_step_handler(message, run_responders)
 
 
 def notify_of_finish():
@@ -147,29 +159,29 @@ def stop_handle(message):
 
 
 @is_me
-@bot.message_handler(commands=['add'])
-def ask_for_add_id(message):
-    bot.send_message(message.chat.id, 'Send me an ID.')
-    bot.register_next_step_handler(message, add_user)
+@bot.message_handler(commands=['users'])
+def users_handle(message):
+    bot.send_message(users.ME, 'Choose an action.', reply_markup=build_btn('Add', 'Delete'))
 
 
-@is_me
 def add_user(message):
-    if message.text.isnumeric() and len(message.text) == 9:
-        users.tg_users.add(int(message.text))
-        bot.send_message(message.chat.id, 'The ID on the list.')
+    id = int(message.text)
+    if id in users.tg_users:
+        bot.send_message(message.chat.id, 'The ID is already on the list.')
     else:
-        bot.send_message(message.chat.id, 'Send me a correct ID.')
+        users.tg_users.add(id)
+        bot.send_message(message.chat.id, 'The ID is on the list.')
 
 
-@is_me
-@bot.message_handler(commands=['delete'])
-def ask_for_del_id(message):
-    bot.send_message(message.chat.id, 'Send me an ID.')
-    bot.register_next_step_handler(message, delete_user)
+@is_cancel
+def get_id(message, action_handler):
+    if message.text.isnumeric() and len(message.text) == 9:
+        action_handler(message)
+    else:
+        bot.send_message(message.chat.id, 'Choose an action again and send me a correct ID.',
+                         reply_markup=build_btn('Add', 'Delete'))
 
 
-@is_me
 def delete_user(message):
     try:
         users.tg_users.remove(int(message.text))
@@ -177,6 +189,20 @@ def delete_user(message):
         bot.send_message(message.chat.id, 'There is not such ID on the list.')
     else:
         bot.send_message(message.chat.id, 'The ID is no longer on the list.')
+
+
+@is_me
+@bot.message_handler(func=lambda message: message.text == 'Add')
+def add_handle(message):
+    bot.send_message(message.chat.id, 'Send me an ID.', reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.register_next_step_handler(message, get_id, add_user)
+
+
+@is_me
+@bot.message_handler(func=lambda message: message.text == 'Delete')
+def delete_handle(message):
+    bot.send_message(message.chat.id, 'Send me an ID.', reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.register_next_step_handler(message, get_id, delete_user)
 
 
 bot.polling()
