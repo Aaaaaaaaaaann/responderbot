@@ -26,35 +26,3 @@ The modules include two dictionaries to build a string: the first one with diffe
 It contains variables with IDs of Telegram users. The recipients are stored in a set, which may be changed by a bot user.
 #### `smtplog.py`
 It merely contains an overridden omit() method of a class SMTPHandler from the logging package. This was needed for proper sending emails with tracebacks.
-## How can you use it
-If the functionality of this bot suits your usage scenarios, there is not much to do.
-
-Create a project:
-
-    git clone https://github.com/Aaaaaaaaaaann/responderbot.git
-    cd responderbot
-    python3 -m venv
-    pip install -r requirements.txt
-
-[Create](https://core.telegram.org/bots#6-botfather) a bot.
-
-Write a message (or messages) using `enreply.py` or `rureply.py` (or rewrite the dictionaries and get_human_time() to be applicable to your language). Or, probably, you may come up with a better and more beautiful idea (hopefully, you will).
-
-In the same module, put the difference between your time zone and UTC in seconds (the last value):
-
-    # 10_800 - the difference in seconds from Moscow (3 hours)
-    return (datetime.strptime(str_time, '%H:%M') - datetime.strptime(current_time, '%H:%M')).seconds - 10_800
-
-Create a module for auto-replies in Telegram. It can be written using [Telethon](https://docs.telethon.dev/en/latest/) library like in this project. If you use Telethon, run your alternative of `tg.py` firstly to authorize and create a `.session` file. Don't delete your `.session` file and don't use it somewhere else while your `tg.py` is being run.
-
-Create similar modules for any messengers you need. For example, in this project [discord.py](https://discordpy.readthedocs.io/en/latest/) was used for Discord.
-
-Create Popen objects for your auto-responders instead of current ones:
-
-    def run_subprocs(free_at):
-    """Run subprocesses, save their PIDs and run errors listeners."""
-        tg_subproc = subprocess.Popen([f'{wrkdir}/venv/bin/python', f'{wrkdir}/tg.py', free_at], stderr=subprocess.PIPE)
-        d_subproc = subprocess.Popen([f'{wrkdir}/venv/bin/python', f'{wrkdir}/d.py', free_at], stderr=subprocess.PIPE)
-        subprocs = [tg_subproc, d_subproc]
-
-If it isn't what you were looking for, anyway, you probably can find the techniques here that might come in handy to write your bot.
